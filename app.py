@@ -37,9 +37,41 @@ def generate_image(prompt):
         st.error(f"Failed to generate image: {e}")
         return None
 
-st.title("Digital Reflection Tarot")
+# Custom CSS for purple waves and mystical feel
+st.markdown("""
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a0033 0%, #2d0052 50%, #1a0033 100%);
+            background-attachment: fixed;
+        }
+        .main {
+            background: linear-gradient(180deg, rgba(138, 43, 226, 0.1) 0%, rgba(75, 0, 130, 0.1) 100%);
+        }
+        h1 {
+            color: #e0b0ff;
+            text-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+            font-family: 'Georgia', serif;
+        }
+        .stTextInput > div > div > input {
+            background-color: rgba(75, 0, 130, 0.2);
+            color: #e0b0ff;
+            border: 2px solid #8a2be2;
+        }
+        .stButton > button {
+            background: linear-gradient(135deg, #8a2be2, #9370db);
+            color: white;
+            border: 2px solid #e0b0ff;
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+        }
+        .stButton > button:hover {
+            box-shadow: 0 0 25px rgba(138, 43, 226, 0.8);
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
-st.write("Draw a random tarot card and generate a unique AI image based on its meaning and your input.")
+st.title("🔮 Echo Arcana")
+
+st.write("*Draw a random tarot card and generate a unique AI image based on its meaning and your input.*")
 
 user_input = st.text_input("Enter your reflection or browsing history summary:")
 
