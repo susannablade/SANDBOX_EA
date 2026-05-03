@@ -40,31 +40,57 @@ def generate_image(prompt):
 # Custom CSS for purple waves and mystical feel
 st.markdown("""
     <style>
-        body {
-            background: linear-gradient(135deg, #1a0033 0%, #2d0052 50%, #1a0033 100%);
+        [data-testid="stAppViewContainer"] {
+            background: linear-gradient(135deg, #2d0052 0%, #1a0033 50%, #3d1875 100%);
             background-attachment: fixed;
         }
+        [data-testid="stHeader"] {
+            background: transparent;
+        }
         .main {
-            background: linear-gradient(180deg, rgba(138, 43, 226, 0.1) 0%, rgba(75, 0, 130, 0.1) 100%);
+            background: transparent;
         }
         h1 {
+            text-align: center;
             color: #e0b0ff;
-            text-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+            text-shadow: 0 0 20px rgba(138, 43, 226, 0.7), 0 0 40px rgba(138, 43, 226, 0.3);
             font-family: 'Georgia', serif;
+            font-size: 3.5em;
+            letter-spacing: 2px;
+        }
+        @keyframes wave {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        .stTextInput, .stButton {
+            display: flex;
+            justify-content: center;
+            margin: 20px auto;
+            border: 2px solid #8a2be2;
+            padding: 15px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.15) 0%, rgba(75, 0, 130, 0.15) 100%);
+            animation: wave 3s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.3), inset 0 0 20px rgba(138, 43, 226, 0.1);
         }
         .stTextInput > div > div > input {
-            background-color: rgba(75, 0, 130, 0.2);
+            background-color: rgba(75, 0, 130, 0.3);
             color: #e0b0ff;
             border: 2px solid #8a2be2;
+            font-size: 16px;
         }
         .stButton > button {
             background: linear-gradient(135deg, #8a2be2, #9370db);
-            color: white;
+            color: #e0b0ff;
             border: 2px solid #e0b0ff;
             box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+            font-weight: bold;
+            padding: 10px 30px;
         }
         .stButton > button:hover {
-            box-shadow: 0 0 25px rgba(138, 43, 226, 0.8);
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.8), 0 0 50px rgba(138, 43, 226, 0.4);
+            background: linear-gradient(135deg, #9370db, #8a2be2);
         }
     </style>
     """, unsafe_allow_html=True)
