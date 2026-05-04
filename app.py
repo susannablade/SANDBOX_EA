@@ -215,7 +215,7 @@ if st.button("Consult the Archive"):
     st.image(artwork["image"], use_container_width=True)
     st.markdown(f"**{artwork['title']}**")
     st.caption(f"{artwork['artist']}, {artwork['date']}")
-st.caption(f"Source: {artwork['source']}")
+    st.caption(f"Source: {artwork['source']}")
 
 interpretation = generate_interpretation(
         card["name"],
