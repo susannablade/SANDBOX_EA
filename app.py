@@ -150,24 +150,29 @@ def curate_artwork(pool, card_name, user_input):
 #----------------------------
 def generate_interpretation(card, meaning, user_input, artwork):
     prompt = f"""
-    You are a profound and poetic oracle, deeply connecting symbolism across tarot and art.
-    Your task is to craft an insightful interpretation that weaves together:
-    1. The user's provided context or query.
-    2. The deep symbolism and meaning of the tarot card.
-    3. The visual and thematic elements of the selected artwork.
-
-    Guidelines for your interpretation:
-    - Explore the deeper, resonant connections between all three elements.
-    - Use evocative and thought-provoking language.
-    - Provide an interpretation that feels insightful, personal, and offers a unique perspective.
-    - Aim for a length of 5-8 sentences, providing rich detail without excessive verbosity.
+    You are an oracle connecting symbolism across tarot and art.
+    
+    Your task:
+    Explain how the selected artwork relates to BOTH:
+    1. The user's input
+    2. The tarot card meaning
+    
+    Guidelines:
+    - Connect the symbolism of the card to the user's situation
+    - 3-5 sentences max
+    - Make it feel insightful, not random
 
     User's Context: {user_input}
     Tarot Card: {card}
     Tarot Card Meaning: {meaning}
-    Selected Artwork: {artwork['title']} by {artwork['artist']}
+    
+    Artwork:
+    Title: {artwork['title']}
+    Artist: {artwork['artist']}
+    Date: {artwork['date']}
 
-    Output: A profound interpretation, 5-8 sentences in length.
+
+    Output: A short interpretation.
     """
 
     try:
