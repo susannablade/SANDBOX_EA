@@ -13,7 +13,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # Define two different models for different tasks
 model_fast = genai.GenerativeModel("gemini-1.5-flash") # Faster model for quick decisions
-model_interpret = genai.GenerativeModel("gemini-1.5-pro") # More capable model for detailed interpretations
+model_interpret = genai.GenerativeModel("gemini-2.5-flash") # More capable model for detailed interpretations
 
 session = requests.Session()
 
@@ -94,7 +94,7 @@ def get_random_artic_pool(n=4):
                     "id": obj.get("id"), # Add artwork ID
                     "image": image_url,
                     "title": obj.get("title", "Untitled"),
-                    "artist": obj.get("artist", "Unknown Artist"),
+                    "artist": obj.get("artist_title", "Unknown Artist"),
                     "date": obj.get("date_display", "Unknown Date"),
                     "source": "Art Institute of Chicago"
                 })
