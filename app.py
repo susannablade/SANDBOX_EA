@@ -1,115 +1,225 @@
+import os
+import random
+import re
 import streamlit as st
 import requests
 from dotenv import load_dotenv
-import os
-from huggingface_hub import InferenceClient
+import google.generativeai as genai
 
-# Load environment variables
-load_dotenv()
+# ---------------------------
+# CONFIG
+# ---------------------------
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
-# API Keys
-HUGGINGFACE_API_TOKEN = os.getenv('HUGGINGFACE_API_TOKEN')
+session = requests.Session()
 
-# Tarot API URL
-TAROT_API_URL = 'https://tarot-api-3hv5.onrender.com/api/v1/cards/random'
+TAROT_API_URL = "https://tarot-api-3hv5.onrender.com/api/v1/cards/random"
+Art_Institute_of_Chicago_API_URL = "https://api.artic.edu/api/v1/artworks/search"
 
-# Hugging Face Model
-HF_MODEL = 'black-forest-labs/FLUX.1-dev'
+# ---------------------------
+# TAROT
+# ---------------------------
+if "recent_cards" not in st.session_state:
+    st.session_state.recent_cards = []
+if "recent_artworks" not in st.session_state:
+    st.session_state.recent_artworks = []
 
-# Initialize HF client
-client = InferenceClient(token=HUGGINGFACE_API_TOKEN)
+def get_random_cards(n=3):
+    cards = []
+    for _ in range(n):
+        try:
+            res = session.get(TAROT_API_URL, timeout=5)
+            res.raise_for_status()
+            cards.append(res.json()["cards"][0])
+        except:
+            continue
+    return cards
 
-def get_random_card():
-    response = requests.get(TAROT_API_URL)
-    if response.status_code == 200:
-        data = response.json()
-        card = data['cards'][0]
-        return card
-    else:
-        st.error("Failed to fetch tarot card.")
-        return None
+def filter_recent(cards):
+    recent = st.session_state.recent_cards
+    filtered = [c for c in cards if c["name"] not in recent]
+    return filtered if filtered else cards
 
-def generate_image(prompt):
+# ---------------------------
+# AI Choose Tarot Card
+# ---------------------------
+def choose_card(cards, user_input):
+    names = [c["name"] for c in cards]
+    prompt = f"User input: {user_input}\n\nChoose the tarot card that best fits.\n\nCards:\n{names}\n\nReturn ONLY the card name."
+
     try:
-        image = client.text_to_image(prompt, model=HF_MODEL)
-        return image
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        for c in cards:
+            if c["name"].lower() in text.lower():
+                return c
+    except:
+        pass
+    return random.choice(cards)
+
+
+# ---------------------------
+# CHICAGO API
+# ---------------------------
+@st.cache_data(ttl=100)
+def get_random_artic_pool(n=4):
+    try:
+        res = session.get(
+            "https://api.artic.edu/api/v1/artworks/search",
+            params={
+                "q": "painting",
+                "fields": "id,title,image_id,artist_title,date_display",
+                "limit": 40 # Increased limit to get more candidates
+            },
+            timeout=5
+        ).json()
+
+        data = res.get("data", [])
+
+        # Filter out recently displayed artworks
+        recent_artwork_ids = st.session_state.recent_artworks
+        filtered_data = [obj for obj in data if obj.get("id") and obj.get("id") not in recent_artwork_ids]
+
+        pool = []
+        for obj in filtered_data:
+            image_id = obj.get("image_id")
+            if image_id:
+                image_url = f"https://www.artic.edu/iiif/2/{image_id}/full/843,/0/default.jpg"
+
+                pool.append({
+                    "id": obj.get("id"), # Add artwork ID
+                    "image": image_url,
+                    "title": obj.get("title", "Untitled"),
+                    "artist": obj.get("artist_title", "Unknown Artist"),
+                    "date": obj.get("date_display", "Unknown Date"),
+                    "source": "Art Institute of Chicago"
+                })
+
+        if len(pool) >= n:
+            return random.sample(pool, n)
+
+        return pool # Return all available unique items if not enough to sample
+
     except Exception as e:
-        st.error(f"Failed to generate image: {e}")
-        return None
+        st.error("Art Institute API error")
+        st.exception(e)
+        return []
+# ---------------------------
+# SEARCH ORCHESTRATOR
+# ---------------------------
+def curate_artwork(pool, card_name, user_input):
+    # Fixed indentation for the selection logic
+    options = "\n".join([
+        f"{i}: {a.get('title','Untitled')} | {a.get('creators',[{}])[0].get('description','Unknown')} | {a.get('creation_date','')}"
+        for i, a in enumerate(pool)
+    ])
 
-# Custom CSS for purple waves and mystical feel
-st.markdown("""
-    <style>
-        [data-testid="stAppViewContainer"] {
-            background: linear-gradient(135deg, #2d0052 0%, #1a0033 50%, #3d1875 100%);
-            background-attachment: fixed;
-        }
-        [data-testid="stHeader"] {
-            background: transparent;
-        }
-        .main {
-            background: transparent;
-        }
-        h1 {
-            text-align: center;
-            color: #e0b0ff;
-            text-shadow: 0 0 20px rgba(138, 43, 226, 0.7), 0 0 40px rgba(138, 43, 226, 0.3);
-            font-family: 'Georgia', serif;
-            font-size: 3.5em;
-            letter-spacing: 2px;
-        }
-        @keyframes wave {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-            100% { transform: translateY(0px); }
-        }
-        .stTextInput, .stButton {
-            display: flex;
-            justify-content: center;
-            margin: 20px auto;
-            border: 2px solid #8a2be2;
-            padding: 15px;
-            border-radius: 15px;
-            background: linear-gradient(135deg, rgba(138, 43, 226, 0.15) 0%, rgba(75, 0, 130, 0.15) 100%);
-            animation: wave 3s ease-in-out infinite;
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.3), inset 0 0 20px rgba(138, 43, 226, 0.1);
-        }
-        .stTextInput > div > div > input {
-            background-color: rgba(75, 0, 130, 0.3);
-            color: #e0b0ff;
-            border: 2px solid #8a2be2;
-            font-size: 16px;
-        }
-        .stButton > button {
-            background: linear-gradient(135deg, #8a2be2, #9370db);
-            color: #e0b0ff;
-            border: 2px solid #e0b0ff;
-            box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
-            font-weight: bold;
-            padding: 10px 30px;
-        }
-        .stButton > button:hover {
-            box-shadow: 0 0 30px rgba(138, 43, 226, 0.8), 0 0 50px rgba(138, 43, 226, 0.4);
-            background: linear-gradient(135deg, #9370db, #8a2be2);
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    prompt = f"""
+    You are an intuitive museum curator with a poetic sense of symbolism.
+    User: {user_input}
+    Tarot: {card_name}
+    Choose the artwork that feels most symbolically resonant.
+    Options:
+    {options}
+    Return ONLY the index number of the selection.
+    """
 
-st.title("🔮 Echo Arcana")
+    try:
+        text = model.generate_content(prompt).text
+        match = re.search(r"\d+", text)
+        choice = int(match.group()) if match else 0
+    except:
+        choice = 0
 
-st.write("*Draw a random tarot card and generate a unique AI image based on its meaning and your input.*")
+    selected = pool[min(choice, len(pool)-1)]
 
-user_input = st.text_input("Enter your reflection or browsing history summary:")
+    return {
+        "id": selected["id"], # Return artwork ID
+        "image": selected["image"],
+        "title": selected["title"],
+        "artist": selected["artist"],
+        "date": selected["date"],
+        "source": selected["source"]}
 
-if st.button("Draw Card and Generate Image"):
-    card = get_random_card()
-    if card:
-        st.subheader(f"Card: {card['name']}")
-        st.write(f"Meaning: {card['meaning_up']}")
-        
-        # Combine card meaning with user input for prompt
-        prompt = f"{card['name']}: {card['meaning_up']}. Reflection: {user_input}"
-        
-        image = generate_image(prompt)
-        if image:
-            st.image(image, caption="Generated AI Image")
+#----------------------------
+# AI INTERPRETATION
+#----------------------------
+def generate_interpretation(card, meaning, user_input, artwork):
+    prompt = f"""
+    You are an oracle connecting symbolism across tarot and art.
+    Your task:
+    Explain how the selected artwork relates to BOTH:
+    1. The user's input
+    2. The tarot card meaning
+
+    Guidelines:
+    - Connect the symbolism of the card to the user's situation
+    - 3-5 sentences max
+    - Make it feel insightful, not random
+
+    User: {user_input}
+    Card: {card}
+    Meaning: {meaning}
+    Artwork: {artwork['title']} by {artwork['artist']}
+    Output: A short interpretation. 3–5 sentences."""
+
+    try:
+        response = model.generate_content(prompt)
+        # Fixed syntax error: returntext -> return text
+        return response.text.strip().replace("\n\n", "\n")
+    except:
+        return meaning
+
+#---------------------------
+# UI
+# ---------------------------
+st.title("Echo Arcana: The Curated Oracle")
+st.write("*Echo your data into the halls of history.*")
+
+user_input = st.text_input(
+    "Enter your last 3 google searches:",
+    placeholder="e.g. banana peels, gardening, organic soil"
+)
+
+if st.button("Consult the Archive"):
+    if not user_input:
+        st.warning("Please enter some search history first.")
+        st.stop()
+
+    with st.spinner("The Librarian is searching the vaults..."):
+        all_cards = get_random_cards(3)
+        cards = filter_recent(all_cards)
+        card = choose_card(cards, user_input)
+
+    st.subheader(f"Your Card: {card['name']}")
+    st.info(card["meaning_up"])
+
+    with st.spinner("🖼️ Curation in progress..."):
+        pool = get_random_artic_pool(4)
+
+    if not pool:
+        st.error("The archive is empty.")
+        st.stop()
+
+    artwork = curate_artwork(pool, card["name"], user_input)
+    st.image(artwork["image"], use_container_width=True)
+    st.markdown(f"**{artwork['title']}**")
+    st.caption(f"{artwork['artist']}, {artwork['date']}")
+    st.caption(f"Source: {artwork['source']}")
+
+    interpretation = generate_interpretation(
+        card["name"],
+        card["meaning_up"],
+        user_input,
+        artwork
+    )
+    st.markdown("**The Oracle's Insight:**")
+    st.write(interpretation)
+
+    st.session_state.recent_cards.append(card["name"])
+    st.session_state.recent_cards = st.session_state.recent_cards[-5:]
+
+    # Add artwork ID to recent_artworks to avoid repetition
+    st.session_state.recent_artworks.append(artwork["id"])
+    st.session_state.recent_artworks = st.session_state.recent_artworks[-10:] # Keep a history of the last 10 artworks
