@@ -217,18 +217,17 @@ if st.button("Consult the Archive"):
     st.caption(f"{artwork['artist']}, {artwork['date']}")
 st.caption(f"Source: {artwork['source']}")
 
-    interpretation = generate_interpretation(
+interpretation = generate_interpretation(
         card["name"],
         card["meaning_up"],
         user_input,
         artwork
     )
-    st.markdown("**The Oracle's Insight:**")
-    st.write(interpretation)
+st.markdown("**The Oracle's Insight:**")
+st.write(interpretation)
+st.session_state.recent_cards.append(card["name"])
+st.session_state.recent_cards = st.session_state.recent_cards[-5:]
 
-    st.session_state.recent_cards.append(card["name"])
-    st.session_state.recent_cards = st.session_state.recent_cards[-5:]
-
-    # Add artwork ID to recent_artworks to avoid repetition
-    st.session_state.recent_artworks.append(artwork["id"])
-    st.session_state.recent_artworks = st.session_state.recent_artworks[-10:] # Keep a history of the last 10 artworks
+ # Add artwork ID to recent_artworks to avoid repetition
+st.session_state.recent_artworks.append(artwork["id"])
+st.session_state.recent_artworks = st.session_state.recent_artworks[-10:] # Keep a history of the last 10 artworks
