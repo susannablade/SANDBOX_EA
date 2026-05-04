@@ -169,9 +169,13 @@ def generate_interpretation(card, meaning, user_input, artwork):
 
     try:
         response = model.generate_content(prompt)
-        return response.text.strip().replace("\n\n", "\n")
-    except:
-        return meaning
+        generated_text = response.text.strip()
+        if not generated_text:
+            return f"The Oracle is silent. (AI failed to generate interpretation due to empty response) Card Meaning: {meaning}"
+        return generated_text.replace("\n\n", "\n")
+    except Exception as e:
+        print(f"Error generating interpretation: {e}")
+        return f"The Oracle is silent. (AI failed to generate interpretation due to error: {e}) Card Meaning: {meaning}"
 
 #---------------------------
 # UI
