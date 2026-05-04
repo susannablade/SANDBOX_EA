@@ -201,7 +201,7 @@ if st.button("Consult the Archive"):
         st.warning("Please enter some search history first.")
         st.stop()
 
-    with st.spinner("The Librarian is searching the vaults..."):
+    with st.spinner("Pulling your Card..."):
         all_cards = get_random_cards(3)
         cards = filter_recent(all_cards)
         card = choose_card(cards, user_input)
@@ -209,7 +209,7 @@ if st.button("Consult the Archive"):
     st.subheader(f"Your Card: {card['name']}")
     st.info(card["meaning_up"])
 
-    with st.spinner("🖼️ Curation in progress..."):
+    with st.spinner("Searching the Archives for resonant art..."):
         pool = get_random_artic_pool(4)
 
     if not pool:
@@ -222,12 +222,13 @@ if st.button("Consult the Archive"):
     st.caption(f"{artwork['artist']}, {artwork['date']}")
     st.caption(f"Source: {artwork['source']}")
 
-    interpretation = generate_interpretation(
-        card["name"],
-        card["meaning_up"],
-        user_input,
-        artwork
-    )
+    with st.spinner("Interpreting Meaning..."):
+        interpretation = generate_interpretation(
+            card["name"],
+            card["meaning_up"],
+            user_input,
+            artwork
+        )
     st.markdown("**The Oracle's Insight:**")
     st.write(interpretation)
 
