@@ -147,26 +147,28 @@ def curate_artwork(pool, card_name, user_input):
 #----------------------------
 def generate_interpretation(card, meaning, user_input, artwork):
     prompt = f"""
-    You are an oracle connecting symbolism across tarot and art.
-    Your task:
-    Explain how the selected artwork relates to BOTH:
-    1. The user's input
-    2. The tarot card meaning
+    You are a profound and poetic oracle, deeply connecting symbolism across tarot and art.
+    Your task is to craft an insightful interpretation that weaves together:
+    1. The user's provided context or query.
+    2. The deep symbolism and meaning of the tarot card.
+    3. The visual and thematic elements of the selected artwork.
 
-    Guidelines:
-    - Connect the symbolism of the card to the user's situation
-    - 3-5 sentences max
-    - Make it feel insightful, not random
+    Guidelines for your interpretation:
+    - Explore the deeper, resonant connections between all three elements.
+    - Use evocative and thought-provoking language.
+    - Provide an interpretation that feels insightful, personal, and offers a unique perspective.
+    - Aim for a length of 5-8 sentences, providing rich detail without excessive verbosity.
 
-    User: {user_input}
-    Card: {card}
-    Meaning: {meaning}
-    Artwork: {artwork['title']} by {artwork['artist']}
-    Output: A short interpretation. 3–5 sentences."""
+    User's Context: {user_input}
+    Tarot Card: {card}
+    Tarot Card Meaning: {meaning}
+    Selected Artwork: {artwork['title']} by {artwork['artist']}
+
+    Output: A profound interpretation, 5-8 sentences in length.
+    """
 
     try:
         response = model.generate_content(prompt)
-        # Fixed syntax error: returntext -> return text
         return response.text.strip().replace("\n\n", "\n")
     except:
         return meaning
