@@ -10,7 +10,10 @@ import google.generativeai as genai
 # CONFIG
 # ---------------------------
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash")
+
+# Define two different models for different tasks
+model_fast = genai.GenerativeModel("gemini-1.5-flash") # Faster model for quick decisions
+model_interpret = genai.GenerativeModel("gemini-1.5-pro") # More capable model for detailed interpretations
 
 session = requests.Session()
 
@@ -49,7 +52,7 @@ def choose_card(cards, user_input):
     prompt = f"User input: {user_input}\n\nChoose the tarot card that best fits.\n\nCards:\n{names}\n\nReturn ONLY the card name."
 
     try:
-        response = model.generate_content(prompt)
+        response = model_fast.generate_content(prompt)
         text = response.text.strip()
         for c in cards:
             if c["name"].lower() in text.lower():
@@ -126,7 +129,7 @@ def curate_artwork(pool, card_name, user_input):
     """
 
     try:
-        text = model.generate_content(prompt).text
+        text = model_fast.generate_content(prompt).text
         match = re.search(r"\d+", text)
         choice = int(match.group()) if match else 0
     except:
@@ -168,7 +171,7 @@ def generate_interpretation(card, meaning, user_input, artwork):
     """
 
     try:
-        response = model.generate_content(prompt)
+        response = model_interpret.generate_content(prompt)
         generated_text = response.text.strip()
         if not generated_text:
             return f"The Oracle is silent. (AI failed to generate interpretation due to empty response) Card Meaning: {meaning}"
@@ -212,7 +215,7 @@ if st.button("Consult the Archive"):
     st.image(artwork["image"], use_container_width=True)
     st.markdown(f"**{artwork['title']}**")
     st.caption(f"{artwork['artist']}, {artwork['date']}")
-    st.caption(f"Source: {artwork['source']}")
+st.caption(f"Source: {artwork['source']}")
 
     interpretation = generate_interpretation(
         card["name"],
