@@ -12,7 +12,7 @@ import google.generativeai as genai
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # Define two different models for different tasks
-model_fast = genai.GenerativeModel("gemini-1.5-flash") # Faster model for quick decisions
+model_fast = genai.GenerativeModel("gemini-2.5-flash-lite") # Faster model for quick decisions
 model_interpret = genai.GenerativeModel("gemini-2.5-flash") # More capable model for detailed interpretations
 
 session = requests.Session()
@@ -189,7 +189,7 @@ def generate_interpretation(card, meaning, user_input, artwork):
 # UI
 # ---------------------------
 st.title("Echo Arcana: The Curated Oracle")
-st.write("*Echo your data into the halls of history.*")
+st.write("**Echo your data into the halls of history. Transform your search history into a symbolic visual reading, retrieved from centuries of art by an intelligent oracle.**")
 
 user_input = st.text_input(
     "Enter your last 3 google searches:",
